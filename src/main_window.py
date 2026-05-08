@@ -1,0 +1,495 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+from queue import Queue
+from typing import Optional, Callable
+
+from config_manager import ConfigManager, FixedAlarmConfig, IntervalAlarmConfig
+from alarm_manager import AlarmManager
+from notification import AlarmNotification
+
+_BG = "#ffffff"
+_BG2 = "#f3f4f6"
+_ACCENT = "#7c3aed"
+_FG = "#1f2937"
+_FG2 = "#6b7280"
+_GREEN = "#059669"
+_RED = "#dc2626"
+
+_DAYS_KR = ["월", "화", "수", "목", "금", "토", "일"]
+_SOUND_OPTIONS = ["default", "beep", "asterisk"]
+
+
+def _style_setup(root: tk.Tk) -> None:
+    style = ttk.Style(root)
+    style.theme_use("clam")
+    style.configure("TButton", background=_ACCENT, foreground="white",
+                    font=("맑은 고딕", 9), padding=4)
+    style.map("TButton", background=[("active", "#6d28d9")])
+    style.configure("Danger.TButton", background=_RED, foreground="white",
+                    font=("맑은 고딕", 9), padding=4)
+    style.map("Danger.TButton", background=[("active", "#dc2626")])
+    style.configure("Treeview", background=_BG2, foreground=_FG,
+                    fieldbackground=_BG2, rowheight=26,
+                    font=("맑은 고딕", 9))
+    style.configure("Treeview.Heading", background=_BG2, foreground=_FG2,
+                    font=("맑은 고딕", 9, "bold"))
+    style.map("Treeview", background=[("selected", _ACCENT)])
+    style.configure("TLabel", background=_BG, foreground=_FG)
+    style.configure("TFrame", background=_BG)
+    style.configure("TCombobox", fieldbackground="white", background="white",
+                    foreground=_FG, selectbackground=_ACCENT)
+    style.configure("TEntry", fieldbackground="white", foreground=_FG,
+                    insertcolor=_FG)
+    style.configure("TCheckbutton", background=_BG, foreground=_FG)
+    style.configure("TSpinbox", fieldbackground="white", foreground=_FG)
+    style.configure("TNotebook", background=_BG)
+    style.configure("TNotebook.Tab", background=_BG2, foreground=_FG2,
+                    padding=[10, 4])
+    style.map("TNotebook.Tab", background=[("selected", _ACCENT)],
+              foreground=[("selected", "white")])
+
+
+class MainWindow:
+    def __init__(self, root: tk.Tk, queue: Queue,
+                 alarm_manager: AlarmManager, config: ConfigManager) -> None:
+        self._root = root
+        self._queue = queue
+        self._alarm_mgr = alarm_manager
+        self._config = config
+
+        _style_setup(root)
+        self._build_ui()
+        self._refresh_display()
+
+    def _build_ui(self) -> None:
+        self._win = tk.Toplevel(self._root)
+        self._win.title("TP Alarm")
+        self._win.geometry("520x560")
+        self._win.configure(bg=_BG)
+        self._win.protocol("WM_DELETE_WINDOW", self.hide)
+        self._win.withdraw()
+
+        # 헤더
+        hdr = tk.Frame(self._win, bg=_ACCENT, height=50)
+        hdr.pack(fill="x")
+        hdr.pack_propagate(False)
+        tk.Label(hdr, text="⏰  TP Alarm", font=("맑은 고딕", 14, "bold"),
+                 bg=_ACCENT, fg="white").pack(side="left", padx=16, pady=10)
+        tk.Button(hdr, text="🔔 알람 미리보기",
+                  font=("맑은 고딕", 9), bg="#6d28d9", fg="white",
+                  relief="flat", padx=10, pady=4, cursor="hand2",
+                  command=self._preview_alarm).pack(side="right", padx=12, pady=10)
+
+        # 상태 패널
+        status_frame = tk.Frame(self._win, bg=_BG2, pady=12)
+        status_frame.pack(fill="x", padx=12, pady=(10, 0))
+
+        tk.Label(status_frame, text="사용 시간", font=("맑은 고딕", 9),
+                 bg=_BG2, fg=_FG2).grid(row=0, column=0, padx=16, sticky="w")
+        self._usage_label = tk.Label(status_frame, text="--",
+                                     font=("맑은 고딕", 18, "bold"),
+                                     bg=_BG2, fg=_GREEN)
+        self._usage_label.grid(row=1, column=0, padx=16, sticky="w")
+
+        tk.Label(status_frame, text="다음 알람까지", font=("맑은 고딕", 9),
+                 bg=_BG2, fg=_FG2).grid(row=0, column=1, padx=16, sticky="w")
+        self._next_label = tk.Label(status_frame, text="--",
+                                    font=("맑은 고딕", 18, "bold"),
+                                    bg=_BG2, fg=_FG)
+        self._next_label.grid(row=1, column=1, padx=16, sticky="w")
+
+        status_frame.columnconfigure(0, weight=1)
+        status_frame.columnconfigure(1, weight=1)
+
+        # 탭
+        notebook = ttk.Notebook(self._win)
+        notebook.pack(fill="both", expand=True, padx=12, pady=10)
+
+        self._fixed_tab = ttk.Frame(notebook)
+        self._interval_tab = ttk.Frame(notebook)
+        self._settings_tab = ttk.Frame(notebook)
+
+        notebook.add(self._fixed_tab, text="  고정 시각 알람  ")
+        notebook.add(self._interval_tab, text="  인터벌 알람  ")
+        notebook.add(self._settings_tab, text="  설정  ")
+
+        self._build_fixed_tab()
+        self._build_interval_tab()
+        self._build_settings_tab()
+
+    def _build_fixed_tab(self) -> None:
+        f = self._fixed_tab
+
+        btn_frame = tk.Frame(f, bg=_BG)
+        btn_frame.pack(fill="x", pady=(8, 4), padx=8)
+        ttk.Button(btn_frame, text="+ 추가", command=self._add_fixed).pack(side="left", padx=2)
+        ttk.Button(btn_frame, text="✏ 수정", command=self._edit_fixed).pack(side="left", padx=2)
+        ttk.Button(btn_frame, text="🗑 삭제", style="Danger.TButton",
+                   command=self._delete_fixed).pack(side="left", padx=2)
+
+        cols = ("enabled", "label", "time", "days", "sound")
+        self._fixed_tree = ttk.Treeview(f, columns=cols, show="headings", height=10)
+        self._fixed_tree.heading("enabled", text="ON")
+        self._fixed_tree.heading("label", text="이름")
+        self._fixed_tree.heading("time", text="시각")
+        self._fixed_tree.heading("days", text="요일")
+        self._fixed_tree.heading("sound", text="소리")
+        self._fixed_tree.column("enabled", width=40, anchor="center")
+        self._fixed_tree.column("label", width=160)
+        self._fixed_tree.column("time", width=70, anchor="center")
+        self._fixed_tree.column("days", width=100, anchor="center")
+        self._fixed_tree.column("sound", width=80, anchor="center")
+        self._fixed_tree.pack(fill="both", expand=True, padx=8, pady=4)
+
+        sb = ttk.Scrollbar(f, orient="vertical", command=self._fixed_tree.yview)
+        self._fixed_tree.configure(yscrollcommand=sb.set)
+
+        self._refresh_fixed_tree()
+
+    def _build_interval_tab(self) -> None:
+        f = self._interval_tab
+
+        btn_frame = tk.Frame(f, bg=_BG)
+        btn_frame.pack(fill="x", pady=(8, 4), padx=8)
+        ttk.Button(btn_frame, text="+ 추가", command=self._add_interval).pack(side="left", padx=2)
+        ttk.Button(btn_frame, text="✏ 수정", command=self._edit_interval).pack(side="left", padx=2)
+        ttk.Button(btn_frame, text="🗑 삭제", style="Danger.TButton",
+                   command=self._delete_interval).pack(side="left", padx=2)
+
+        cols = ("enabled", "label", "interval", "sound")
+        self._interval_tree = ttk.Treeview(f, columns=cols, show="headings", height=10)
+        self._interval_tree.heading("enabled", text="ON")
+        self._interval_tree.heading("label", text="이름")
+        self._interval_tree.heading("interval", text="간격")
+        self._interval_tree.heading("sound", text="소리")
+        self._interval_tree.column("enabled", width=40, anchor="center")
+        self._interval_tree.column("label", width=200)
+        self._interval_tree.column("interval", width=100, anchor="center")
+        self._interval_tree.column("sound", width=80, anchor="center")
+        self._interval_tree.pack(fill="both", expand=True, padx=8, pady=4)
+
+        self._refresh_interval_tree()
+
+    def _build_settings_tab(self) -> None:
+        f = self._settings_tab
+        pad = {"padx": 16, "pady": 8}
+
+        self._startup_var = tk.BooleanVar(value=self._config.start_with_windows)
+        ttk.Checkbutton(f, text="Windows 시작 시 자동 실행",
+                        variable=self._startup_var,
+                        command=self._on_startup_toggle).pack(anchor="w", **pad)
+
+        self._source_var = tk.StringVar(value=self._config.settings.usage_time_source)
+        ttk.Label(f, text="사용 시간 기준").pack(anchor="w", padx=16, pady=(12, 0))
+        ttk.Radiobutton(f, text="앱 시작 시간 기준", variable=self._source_var,
+                        value="app_start", command=self._on_source_change).pack(anchor="w", padx=24)
+        ttk.Radiobutton(f, text="PC 부팅 시간 기준", variable=self._source_var,
+                        value="boot", command=self._on_source_change).pack(anchor="w", padx=24)
+
+    def _on_startup_toggle(self) -> None:
+        self._config.start_with_windows = self._startup_var.get()
+
+    def _on_source_change(self) -> None:
+        self._config.settings.usage_time_source = self._source_var.get()
+        self._config.save()
+
+    # --- Refresh ---
+
+    def _refresh_fixed_tree(self) -> None:
+        self._fixed_tree.delete(*self._fixed_tree.get_children())
+        for alarm in self._config.get_fixed_alarms():
+            days_str = "매일" if not alarm.days else "".join(_DAYS_KR[d] for d in sorted(alarm.days))
+            self._fixed_tree.insert("", "end", iid=alarm.id, values=(
+                "✔" if alarm.enabled else "✘",
+                alarm.label,
+                f"{alarm.hour:02d}:{alarm.minute:02d}",
+                days_str,
+                alarm.sound,
+            ))
+
+    def _refresh_interval_tree(self) -> None:
+        self._interval_tree.delete(*self._interval_tree.get_children())
+        for alarm in self._config.get_interval_alarms():
+            h = alarm.interval_minutes // 60
+            m = alarm.interval_minutes % 60
+            interval_str = (f"{h}시간 " if h else "") + (f"{m}분" if m else "")
+            self._interval_tree.insert("", "end", iid=alarm.id, values=(
+                "✔" if alarm.enabled else "✘",
+                alarm.label,
+                interval_str.strip(),
+                alarm.sound,
+            ))
+
+    def _refresh_display(self) -> None:
+        secs = self._alarm_mgr.get_usage_seconds()
+        self._usage_label.config(text=AlarmManager.format_duration(secs))
+
+        next_info = self._alarm_mgr.get_next_alarm_info()
+        if next_info:
+            label, secs_until = next_info
+            self._next_label.config(
+                text=f"{AlarmManager.format_duration(secs_until)} ({label})"
+            )
+        else:
+            self._next_label.config(text="없음")
+
+        self._win.after(1000, self._refresh_display)
+
+    # --- Fixed Alarm CRUD ---
+
+    def _add_fixed(self) -> None:
+        FixedAlarmDialog(self._win, None, self._on_save_fixed)
+
+    def _edit_fixed(self) -> None:
+        sel = self._fixed_tree.selection()
+        if not sel:
+            return
+        alarm_id = sel[0]
+        alarm = next((a for a in self._config.get_fixed_alarms() if a.id == alarm_id), None)
+        if alarm:
+            FixedAlarmDialog(self._win, alarm, self._on_save_fixed)
+
+    def _delete_fixed(self) -> None:
+        sel = self._fixed_tree.selection()
+        if not sel:
+            return
+        if messagebox.askyesno("삭제 확인", "선택한 알람을 삭제할까요?", parent=self._win):
+            self._config.delete_alarm(sel[0])
+            self._alarm_mgr.reload_from_config()
+            self._refresh_fixed_tree()
+
+    def _on_save_fixed(self, alarm: FixedAlarmConfig) -> None:
+        self._config.upsert_fixed_alarm(alarm)
+        self._alarm_mgr.reload_from_config()
+        self._refresh_fixed_tree()
+
+    # --- Interval Alarm CRUD ---
+
+    def _add_interval(self) -> None:
+        IntervalAlarmDialog(self._win, None, self._on_save_interval)
+
+    def _edit_interval(self) -> None:
+        sel = self._interval_tree.selection()
+        if not sel:
+            return
+        alarm_id = sel[0]
+        alarm = next((a for a in self._config.get_interval_alarms() if a.id == alarm_id), None)
+        if alarm:
+            IntervalAlarmDialog(self._win, alarm, self._on_save_interval)
+
+    def _delete_interval(self) -> None:
+        sel = self._interval_tree.selection()
+        if not sel:
+            return
+        if messagebox.askyesno("삭제 확인", "선택한 알람을 삭제할까요?", parent=self._win):
+            self._config.delete_alarm(sel[0])
+            self._alarm_mgr.reload_from_config()
+            self._refresh_interval_tree()
+
+    def _on_save_interval(self, alarm: IntervalAlarmConfig) -> None:
+        self._config.upsert_interval_alarm(alarm)
+        self._alarm_mgr.reload_from_config()
+        self._refresh_interval_tree()
+
+    # --- Preview ---
+
+    def _preview_alarm(self) -> None:
+        AlarmNotification.show(
+            self._root, "미리보기 알람", "interval", "default",
+            usage_seconds=self._alarm_mgr.get_usage_seconds(),
+            get_usage_fn=self._alarm_mgr.get_usage_seconds,
+        )
+
+    # --- Show / Hide ---
+
+    def show(self) -> None:
+        self._win.deiconify()
+        self._win.lift()
+        self._win.focus_force()
+        self._startup_var.set(self._config.start_with_windows)
+        self._refresh_fixed_tree()
+        self._refresh_interval_tree()
+
+    def hide(self) -> None:
+        self._win.withdraw()
+
+    def is_visible(self) -> bool:
+        return self._win.winfo_viewable()
+
+
+class FixedAlarmDialog(tk.Toplevel):
+    def __init__(self, parent: tk.Widget, alarm: Optional[FixedAlarmConfig],
+                 on_save: Callable) -> None:
+        super().__init__(parent)
+        self._on_save = on_save
+        self._alarm = alarm
+        self.title("고정 시각 알람 " + ("수정" if alarm else "추가"))
+        self.resizable(False, False)
+        self.configure(bg=_BG)
+        self.wm_attributes("-topmost", True)
+        self.grab_set()
+        self._build()
+        self.update_idletasks()
+        x = parent.winfo_rootx() + (parent.winfo_width() - self.winfo_width()) // 2
+        y = parent.winfo_rooty() + (parent.winfo_height() - self.winfo_height()) // 2
+        self.geometry(f"+{x}+{y}")
+
+    def _build(self) -> None:
+        p = {"padx": 12, "pady": 6}
+        a = self._alarm
+
+        tk.Label(self, text="알람 이름", bg=_BG, fg=_FG2,
+                 font=("맑은 고딕", 9)).grid(row=0, column=0, sticky="w", **p)
+        self._label_var = tk.StringVar(value=a.label if a else "")
+        ttk.Entry(self, textvariable=self._label_var, width=24).grid(
+            row=0, column=1, columnspan=3, sticky="ew", **p)
+
+        tk.Label(self, text="시각 (HH:MM)", bg=_BG, fg=_FG2,
+                 font=("맑은 고딕", 9)).grid(row=1, column=0, sticky="w", **p)
+        self._hour_var = tk.StringVar(value=str(a.hour) if a else "9")
+        self._min_var = tk.StringVar(value=str(a.minute) if a else "0")
+        ttk.Spinbox(self, from_=0, to=23, textvariable=self._hour_var,
+                    width=5, format="%02.0f").grid(row=1, column=1, **p)
+        tk.Label(self, text=":", bg=_BG, fg=_FG).grid(row=1, column=2)
+        ttk.Spinbox(self, from_=0, to=59, textvariable=self._min_var,
+                    width=5, format="%02.0f").grid(row=1, column=3, **p)
+
+        tk.Label(self, text="요일 (빈칸=매일)", bg=_BG, fg=_FG2,
+                 font=("맑은 고딕", 9)).grid(row=2, column=0, sticky="w", **p)
+        self._day_vars = []
+        day_frame = tk.Frame(self, bg=_BG)
+        day_frame.grid(row=2, column=1, columnspan=3, sticky="w", **p)
+        existing_days = a.days if a else []
+        for i, name in enumerate(_DAYS_KR):
+            var = tk.BooleanVar(value=(i in existing_days))
+            self._day_vars.append(var)
+            ttk.Checkbutton(day_frame, text=name, variable=var).pack(side="left")
+
+        tk.Label(self, text="소리", bg=_BG, fg=_FG2,
+                 font=("맑은 고딕", 9)).grid(row=3, column=0, sticky="w", **p)
+        self._sound_var = tk.StringVar(value=a.sound if a else "default")
+        ttk.Combobox(self, textvariable=self._sound_var,
+                     values=_SOUND_OPTIONS, state="readonly",
+                     width=12).grid(row=3, column=1, columnspan=2, sticky="w", **p)
+
+        self._enabled_var = tk.BooleanVar(value=a.enabled if a else True)
+        ttk.Checkbutton(self, text="활성화", variable=self._enabled_var).grid(
+            row=4, column=0, columnspan=2, sticky="w", **p)
+
+        btn_frame = tk.Frame(self, bg=_BG)
+        btn_frame.grid(row=5, column=0, columnspan=4, pady=10)
+        ttk.Button(btn_frame, text="저장", command=self._save).pack(side="left", padx=6)
+        ttk.Button(btn_frame, text="취소", command=self.destroy).pack(side="left", padx=6)
+
+    def _save(self) -> None:
+        label = self._label_var.get().strip()
+        if not label:
+            tk.messagebox.showwarning("입력 오류", "알람 이름을 입력하세요.", parent=self)
+            return
+        try:
+            hour = int(self._hour_var.get())
+            minute = int(self._min_var.get())
+            assert 0 <= hour <= 23 and 0 <= minute <= 59
+        except (ValueError, AssertionError):
+            tk.messagebox.showwarning("입력 오류", "올바른 시각을 입력하세요.", parent=self)
+            return
+
+        days = [i for i, v in enumerate(self._day_vars) if v.get()]
+        from config_manager import ConfigManager
+        alarm = FixedAlarmConfig(
+            id=self._alarm.id if self._alarm else ConfigManager.new_id(),
+            enabled=self._enabled_var.get(),
+            label=label,
+            hour=hour,
+            minute=minute,
+            days=days,
+            sound=self._sound_var.get(),
+            last_fired_date=self._alarm.last_fired_date if self._alarm else "",
+        )
+        self._on_save(alarm)
+        self.destroy()
+
+
+class IntervalAlarmDialog(tk.Toplevel):
+    def __init__(self, parent: tk.Widget, alarm: Optional[IntervalAlarmConfig],
+                 on_save: Callable) -> None:
+        super().__init__(parent)
+        self._on_save = on_save
+        self._alarm = alarm
+        self.title("인터벌 알람 " + ("수정" if alarm else "추가"))
+        self.resizable(False, False)
+        self.configure(bg=_BG)
+        self.wm_attributes("-topmost", True)
+        self.grab_set()
+        self._build()
+        self.update_idletasks()
+        x = parent.winfo_rootx() + (parent.winfo_width() - self.winfo_width()) // 2
+        y = parent.winfo_rooty() + (parent.winfo_height() - self.winfo_height()) // 2
+        self.geometry(f"+{x}+{y}")
+
+    def _build(self) -> None:
+        p = {"padx": 12, "pady": 6}
+        a = self._alarm
+
+        tk.Label(self, text="알람 이름", bg=_BG, fg=_FG2,
+                 font=("맑은 고딕", 9)).grid(row=0, column=0, sticky="w", **p)
+        self._label_var = tk.StringVar(value=a.label if a else "")
+        ttk.Entry(self, textvariable=self._label_var, width=24).grid(
+            row=0, column=1, columnspan=2, sticky="ew", **p)
+
+        tk.Label(self, text="간격 (시간)", bg=_BG, fg=_FG2,
+                 font=("맑은 고딕", 9)).grid(row=1, column=0, sticky="w", **p)
+        existing_h = (a.interval_minutes // 60) if a else 1
+        existing_m = (a.interval_minutes % 60) if a else 0
+        self._hour_var = tk.StringVar(value=str(existing_h))
+        self._min_var = tk.StringVar(value=str(existing_m))
+        hf = tk.Frame(self, bg=_BG)
+        hf.grid(row=1, column=1, columnspan=2, sticky="w", **p)
+        ttk.Spinbox(hf, from_=0, to=23, textvariable=self._hour_var, width=5).pack(side="left")
+        tk.Label(hf, text="시간", bg=_BG, fg=_FG).pack(side="left", padx=4)
+        ttk.Spinbox(hf, from_=0, to=59, textvariable=self._min_var, width=5).pack(side="left")
+        tk.Label(hf, text="분", bg=_BG, fg=_FG).pack(side="left", padx=4)
+
+        tk.Label(self, text="소리", bg=_BG, fg=_FG2,
+                 font=("맑은 고딕", 9)).grid(row=2, column=0, sticky="w", **p)
+        self._sound_var = tk.StringVar(value=a.sound if a else "beep")
+        ttk.Combobox(self, textvariable=self._sound_var,
+                     values=_SOUND_OPTIONS, state="readonly",
+                     width=12).grid(row=2, column=1, sticky="w", **p)
+
+        self._enabled_var = tk.BooleanVar(value=a.enabled if a else True)
+        ttk.Checkbutton(self, text="활성화", variable=self._enabled_var).grid(
+            row=3, column=0, columnspan=2, sticky="w", **p)
+
+        btn_frame = tk.Frame(self, bg=_BG)
+        btn_frame.grid(row=4, column=0, columnspan=3, pady=10)
+        ttk.Button(btn_frame, text="저장", command=self._save).pack(side="left", padx=6)
+        ttk.Button(btn_frame, text="취소", command=self.destroy).pack(side="left", padx=6)
+
+    def _save(self) -> None:
+        label = self._label_var.get().strip()
+        if not label:
+            tk.messagebox.showwarning("입력 오류", "알람 이름을 입력하세요.", parent=self)
+            return
+        try:
+            h = int(self._hour_var.get())
+            m = int(self._min_var.get())
+            total = h * 60 + m
+            assert total > 0
+        except (ValueError, AssertionError):
+            tk.messagebox.showwarning("입력 오류", "간격은 1분 이상이어야 합니다.", parent=self)
+            return
+
+        import time
+        from config_manager import ConfigManager
+        alarm = IntervalAlarmConfig(
+            id=self._alarm.id if self._alarm else ConfigManager.new_id(),
+            enabled=self._enabled_var.get(),
+            label=label,
+            interval_minutes=total,
+            sound=self._sound_var.get(),
+            next_fire_epoch=self._alarm.next_fire_epoch if self._alarm
+                           else time.time() + total * 60,
+        )
+        self._on_save(alarm)
+        self.destroy()
