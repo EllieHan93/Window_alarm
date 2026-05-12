@@ -2,9 +2,10 @@
 import ctypes
 from pathlib import Path
 
-_FONT_DIR = Path(__file__).parent.parent / "fonts" / "Mona_20260424_2053" / "ttf"
-_FONT_MAIN = _FONT_DIR / "01_Main" / "Mona12.ttf"
-_FONT_KR   = _FONT_DIR / "03_Text" / "Mona12TextKR.ttf"
+_FONT_DIR   = Path(__file__).parent.parent / "fonts" / "Mona_20260424_2053" / "ttf"
+_FONT_MAIN  = _FONT_DIR / "01_Main"  / "Mona12.ttf"
+_FONT_KR    = _FONT_DIR / "03_Text"  / "Mona12TextKR.ttf"
+_FONT_EMOJI = _FONT_DIR / "02_Emoji" / "Mona12ColorEmoji.ttf"
 
 _FAMILY = "맑은 고딕"  # fallback
 
@@ -14,6 +15,7 @@ def load() -> str:
     try:
         ctypes.windll.gdi32.AddFontResourceW(str(_FONT_MAIN))
         ctypes.windll.gdi32.AddFontResourceW(str(_FONT_KR))
+        ctypes.windll.gdi32.AddFontResourceW(str(_FONT_EMOJI))
         import tkinter.font as tkfont
         for name in tkfont.families():
             if "mona" in name.lower():
