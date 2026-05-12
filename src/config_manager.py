@@ -34,6 +34,7 @@ class IntervalAlarmConfig:
 class AppSettings:
     start_with_windows: bool = True
     usage_time_source: str = "app_start"  # "app_start" or "boot"
+    admin_pin: str = "0104"
 
 
 _DEFAULT_CONFIG = {
@@ -76,6 +77,7 @@ class ConfigManager:
         self.settings = AppSettings(
             start_with_windows=s.get("start_with_windows", True),
             usage_time_source=s.get("usage_time_source", "app_start"),
+            admin_pin=s.get("admin_pin", "0104"),
         )
         self._write_startup_registry(self.settings.start_with_windows)
 
@@ -164,6 +166,9 @@ class ConfigManager:
             winreg.CloseKey(key)
         except OSError:
             pass
+
+    def check_pin(self, pin: str) -> bool:
+        return pin == self.settings.admin_pin
 
     # --- Helpers ---
 

@@ -199,6 +199,30 @@
 - `inner` 프레임을 `dialog`에 직접 pack
 
 > 여기까지 스프린트 정리해보자
+> 아 그리고 스프린트가 하나 끝나면 모든 화면의 스크린샷 찍어서 기록해줄래?
+
+- 스프린트 종료 시 앱 실행 → 화면 스크린샷 촬영 → `docs/sprint-XX/screenshots/` 에 저장하는 규칙 수립
+
+---
+
+## Sprint 07 — 관리자 잠금 & 트레이 개선
+
+> 이제 스프린트 7 을 진행해보자, 새로운 기능을 넣을건데,  
+> 알람설정에 관련된 기능은 관리자만 볼수있게하고싶어 비밀번호는 0104  
+> UI 자체를 숨기고싶고, 트레이에서 프로그램을 실행시켰을땐,  
+> 사용시간만 보였으면 좋겟어, 나머지는 버튼을 들어가야 관리창이 나오게.
+
+- `AppSettings.admin_pin = "0104"` 추가, `ConfigManager.check_pin()` 구현
+- `AlarmManager.get_active_alarm_count()` 추가
+- `MainWindow` 2-모드 구조: 상태 뷰(320×200) ↔ 관리 뷰(520×560)
+- `PinDialog`: 4자리 PIN 입력, 3회 실패 자동 닫힘
+- 트레이에서 창 열면 항상 상태 뷰(사용 시간 + [관리자 설정] 버튼)
+- [🔒 잠금] 버튼으로 관리 뷰 → 상태 뷰 복귀
+- TRAY-01: 동적 시계 아이콘 (`_create_icon_image()` 현재 시각 반영)
+- TRAY-02: 툴팁 갱신 30초 → 5초
+- TRAY-03: 툴팁에 날짜, 활성 알람 수 추가
+
+> 여기까지 스프린트 정리해보자
 
 - Sprint 06 전체 문서 최종 업데이트 (PLANNER / DESIGNER / DEVELOPER / QC / RESULT)
 - 완료: TOAST-01(accent 색상), TOAST-03(fade-in), EXTRA(PNG·플로팅·투명·테두리 제거)

@@ -116,6 +116,10 @@ class AlarmManager:
         candidates.sort(key=lambda x: x[1])
         return candidates[0]
 
+    def get_active_alarm_count(self) -> int:
+        return (sum(1 for a in self._fixed_alarms if a.enabled) +
+                sum(1 for a in self._interval_alarms if a.enabled))
+
     @staticmethod
     def format_duration(seconds: int) -> str:
         h = seconds // 3600
