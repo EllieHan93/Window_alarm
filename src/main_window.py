@@ -84,7 +84,7 @@ class MainWindow:
         hdr = tk.Frame(self._win, bg=_ACCENT, height=50)
         hdr.pack(fill="x")
         hdr.pack_propagate(False)
-        tk.Label(hdr, text="🕹️  양방구는 게임중", font=(F, 14, "bold"),
+        tk.Label(hdr, text="양방구는 게임중", font=(F, 14, "bold"),
                  bg=_ACCENT, fg="white").pack(side="left", padx=16, pady=10)
 
         # 투명 관리자 버튼 (항상 우측 상단에 숨겨져 있음)
@@ -96,12 +96,12 @@ class MainWindow:
 
         # 헤더 버튼 (관리 뷰에서만 pack)
         self._lock_btn = tk.Button(
-            hdr, text="🔒", font=(F, 11),
+            hdr, text="잠금", font=(F, 9),
             bg=_ACCENT, fg="white", activebackground="#0277b8",
             relief="flat", padx=8, cursor="hand2",
             command=self._enter_status_mode)
         self._preview_btn = tk.Button(
-            hdr, text="🔔 미리보기", font=(F, 9),
+            hdr, text="미리보기", font=(F, 9),
             bg="#028ab5", fg="white", activebackground="#0277b8",
             relief="flat", padx=10, pady=4, cursor="hand2",
             command=self._preview_alarm)
@@ -135,19 +135,19 @@ class MainWindow:
 
         self._coffee_border = tk.Frame(btn_row, bg=_ACCENT, padx=2, pady=2)
         self._coffee_border.pack(side="left", padx=(0, 8))
-        tk.Button(self._coffee_border, text="☕ 커피 마시고싶다",
+        tk.Button(self._coffee_border, text="커피 마시고싶다",
                   font=(F, 10), bg=_ACCENT, fg="white",
                   activebackground="#0277b8", relief="flat",
                   padx=12, pady=6, cursor="hand2",
-                  command=lambda: self._send_drink("coffee", "☕ 커피 요청이 들어왔어요!")).pack()
+                  command=lambda: self._send_drink("coffee", "커피 요청이 들어왔어요!")).pack()
 
         self._tea_border = tk.Frame(btn_row, bg=_GREEN, padx=2, pady=2)
         self._tea_border.pack(side="left")
-        tk.Button(self._tea_border, text="🍵 차 마시고싶다",
+        tk.Button(self._tea_border, text="차 마시고싶다",
                   font=(F, 10), bg=_GREEN, fg="white",
                   activebackground="#368a38", relief="flat",
                   padx=12, pady=6, cursor="hand2",
-                  command=lambda: self._send_drink("tea", "🍵 차 요청이 들어왔어요!")).pack()
+                  command=lambda: self._send_drink("tea", "차 요청이 들어왔어요!")).pack()
 
         self._drink_feedback = tk.Label(
             self._status_footer, text="",
@@ -217,9 +217,9 @@ class MainWindow:
 
     def _flash_drink(self, drink_type: str) -> None:
         if drink_type == "coffee":
-            border, label_text, orig = self._coffee_border, "☕  +1", _ACCENT
+            border, label_text, orig = self._coffee_border, "커피 +1", _ACCENT
         else:
-            border, label_text, orig = self._tea_border,   "🍵  +1", _GREEN
+            border, label_text, orig = self._tea_border,   "차 +1",   _GREEN
 
         border.config(bg=_YELLOW)
         self._drink_feedback.config(text=label_text, fg=orig)
@@ -242,9 +242,10 @@ class MainWindow:
         btn_frame = tk.Frame(f, bg=_BG)
         btn_frame.pack(fill="x", pady=(8, 4), padx=8)
         ttk.Button(btn_frame, text="+ 추가", command=self._add_fixed).pack(side="left", padx=2)
-        ttk.Button(btn_frame, text="✏ 수정", command=self._edit_fixed).pack(side="left", padx=2)
-        ttk.Button(btn_frame, text="🗑 삭제", style="Danger.TButton",
+        ttk.Button(btn_frame, text="수정", command=self._edit_fixed).pack(side="left", padx=2)
+        ttk.Button(btn_frame, text="삭제", style="Danger.TButton",
                    command=self._delete_fixed).pack(side="left", padx=2)
+        ttk.Button(btn_frame, text="ON/OFF", command=self._toggle_fixed).pack(side="left", padx=2)
 
         cols = ("enabled", "label", "time", "days", "sound")
         self._fixed_tree = ttk.Treeview(f, columns=cols, show="headings", height=10)
@@ -273,9 +274,10 @@ class MainWindow:
         btn_frame = tk.Frame(f, bg=_BG)
         btn_frame.pack(fill="x", pady=(8, 4), padx=8)
         ttk.Button(btn_frame, text="+ 추가", command=self._add_interval).pack(side="left", padx=2)
-        ttk.Button(btn_frame, text="✏ 수정", command=self._edit_interval).pack(side="left", padx=2)
-        ttk.Button(btn_frame, text="🗑 삭제", style="Danger.TButton",
+        ttk.Button(btn_frame, text="수정", command=self._edit_interval).pack(side="left", padx=2)
+        ttk.Button(btn_frame, text="삭제", style="Danger.TButton",
                    command=self._delete_interval).pack(side="left", padx=2)
+        ttk.Button(btn_frame, text="ON/OFF", command=self._toggle_interval).pack(side="left", padx=2)
 
         cols = ("enabled", "label", "interval", "sound")
         self._interval_tree = ttk.Treeview(f, columns=cols, show="headings", height=10)
@@ -335,14 +337,14 @@ class MainWindow:
 
         btn_frame = tk.Frame(f, bg=_BG)
         btn_frame.pack(fill="x", pady=(8, 4), padx=8)
-        ttk.Button(btn_frame, text="🔄 새로고침",
+        ttk.Button(btn_frame, text="새로고침",
                    command=self._refresh_drink_log).pack(side="left", padx=2)
 
         cols = ("date", "coffee", "tea", "total")
         self._drink_tree = ttk.Treeview(f, columns=cols, show="headings", height=12)
         self._drink_tree.heading("date",   text="날짜")
-        self._drink_tree.heading("coffee", text="☕ 커피")
-        self._drink_tree.heading("tea",    text="🍵 차")
+        self._drink_tree.heading("coffee", text="커피")
+        self._drink_tree.heading("tea",    text="차")
         self._drink_tree.heading("total",  text="합계")
         self._drink_tree.column("date",   width=130, anchor="center")
         self._drink_tree.column("coffee", width=80,  anchor="center")
@@ -366,13 +368,13 @@ class MainWindow:
 
         btn_frame = tk.Frame(f, bg=_BG)
         btn_frame.pack(fill="x", pady=(8, 4), padx=8)
-        ttk.Button(btn_frame, text="🔄 새로고침",
+        ttk.Button(btn_frame, text="새로고침",
                    command=self._refresh_game_log).pack(side="left", padx=2)
 
         cols = ("date", "duration")
         self._game_tree = ttk.Treeview(f, columns=cols, show="headings", height=12)
         self._game_tree.heading("date",     text="날짜")
-        self._game_tree.heading("duration", text="🎮 플레이 시간")
+        self._game_tree.heading("duration", text="플레이 시간")
         self._game_tree.column("date",     width=160, anchor="center")
         self._game_tree.column("duration", width=200, anchor="center")
         self._game_tree.pack(fill="both", expand=True, padx=8, pady=4)
@@ -471,6 +473,18 @@ class MainWindow:
             self._alarm_mgr.reload_from_config()
             self._refresh_fixed_tree()
 
+    def _toggle_fixed(self) -> None:
+        sel = self._fixed_tree.selection()
+        if not sel:
+            return
+        alarm = next((a for a in self._config.get_fixed_alarms() if a.id == sel[0]), None)
+        if alarm:
+            alarm.enabled = not alarm.enabled
+            self._config.upsert_fixed_alarm(alarm)
+            self._alarm_mgr.reload_from_config()
+            self._refresh_fixed_tree()
+            self._fixed_tree.selection_set(sel[0])
+
     def _on_save_fixed(self, alarm: FixedAlarmConfig) -> None:
         self._config.upsert_fixed_alarm(alarm)
         self._alarm_mgr.reload_from_config()
@@ -499,6 +513,18 @@ class MainWindow:
             self._config.delete_alarm(sel[0])
             self._alarm_mgr.reload_from_config()
             self._refresh_interval_tree()
+
+    def _toggle_interval(self) -> None:
+        sel = self._interval_tree.selection()
+        if not sel:
+            return
+        alarm = next((a for a in self._config.get_interval_alarms() if a.id == sel[0]), None)
+        if alarm:
+            alarm.enabled = not alarm.enabled
+            self._config.upsert_interval_alarm(alarm)
+            self._alarm_mgr.reload_from_config()
+            self._refresh_interval_tree()
+            self._interval_tree.selection_set(sel[0])
 
     def _on_save_interval(self, alarm: IntervalAlarmConfig) -> None:
         self._config.upsert_interval_alarm(alarm)
@@ -552,7 +578,7 @@ class PinDialog(tk.Toplevel):
         self.geometry(f"+{x}+{y}")
 
     def _build(self) -> None:
-        tk.Label(self, text="🔐  관리자 비밀번호",
+        tk.Label(self, text="관리자 비밀번호",
                  font=(font_loader.family(), 11, "bold"),
                  bg=_BG, fg=_FG).pack(pady=(20, 8), padx=24)
 
