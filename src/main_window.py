@@ -9,6 +9,7 @@ from notification import AlarmNotification
 import font_loader
 import notifier
 import drink_log
+import game_log
 
 _BG     = "#ffffff"
 _BG2    = "#e8f4fd"
@@ -148,15 +149,18 @@ class MainWindow:
         self._interval_tab = ttk.Frame(self._mgmt_body)
         self._settings_tab = ttk.Frame(self._mgmt_body)
         self._drink_log_tab = ttk.Frame(self._mgmt_body)
+        self._game_log_tab  = ttk.Frame(self._mgmt_body)
         self._mgmt_body.add(self._fixed_tab,    text="  고정 시각 알람  ")
         self._mgmt_body.add(self._interval_tab, text="  인터벌 알람  ")
         self._mgmt_body.add(self._settings_tab, text="  설정  ")
         self._mgmt_body.add(self._drink_log_tab, text="  음료 기록  ")
+        self._mgmt_body.add(self._game_log_tab,  text="  게임 기록  ")
 
         self._build_fixed_tab()
         self._build_interval_tab()
         self._build_settings_tab()
         self._build_drink_log_tab()
+        self._build_game_log_tab()
 
         # 초기 상태: 상태 뷰
         self._enter_status_mode()
@@ -184,6 +188,7 @@ class MainWindow:
         self._refresh_fixed_tree()
         self._refresh_interval_tree()
         self._refresh_drink_log()
+        self._refresh_game_log()
 
     def _on_manage(self) -> None:
         PinDialog(self._win, self._config, on_success=self._enter_mgmt_mode)
@@ -327,6 +332,31 @@ class MainWindow:
                 date_str, coffee, tea, coffee + tea
             ))
 
+    def _build_game_log_tab(self) -> None:
+        f = self._game_log_tab
+
+        btn_frame = tk.Frame(f, bg=_BG)
+        btn_frame.pack(fill="x", pady=(8, 4), padx=8)
+        ttk.Button(btn_frame, text="🔄 새로고침",
+                   command=self._refresh_game_log).pack(side="left", padx=2)
+
+        cols = ("date", "duration")
+        self._game_tree = ttk.Treeview(f, columns=cols, show="headings", height=12)
+        self._game_tree.heading("date",     text="날짜")
+        self._game_tree.heading("duration", text="🎮 플레이 시간")
+        self._game_tree.column("date",     width=160, anchor="center")
+        self._game_tree.column("duration", width=200, anchor="center")
+        self._game_tree.pack(fill="both", expand=True, padx=8, pady=4)
+
+        self._refresh_game_log()
+
+    def _refresh_game_log(self) -> None:
+        self._game_tree.delete(*self._game_tree.get_children())
+        for date_str, seconds in game_log.get_log().items():
+            self._game_tree.insert("", "end", values=(
+                date_str, game_log.fmt_duration(seconds)
+            ))
+
     def _on_startup_toggle(self) -> None:
         self._config.start_with_windows = self._startup_var.get()
 
@@ -380,6 +410,11 @@ class MainWindow:
             )
         else:
             self._next_label.config(text="없음")
+
+        # 1분마다 게임 시간 저장
+        self._game_log_tick = getattr(self, "_game_log_tick", 0) + 1
+        if self._game_log_tick % 60 == 0:
+            game_log.update(secs)
 
         self._win.after(1000, self._refresh_display)
 

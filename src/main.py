@@ -12,6 +12,7 @@ from main_window import MainWindow
 from tray_app import TrayApp, Command
 from notification import AlarmNotification
 import font_loader
+import game_log
 
 
 def _scheduler_loop(alarm_mgr: AlarmManager, queue: Queue, stop_event: threading.Event) -> None:
@@ -30,6 +31,8 @@ def _process_queue(root: tk.Tk, window: MainWindow, tray: TrayApp,
                 if item.action == "open_window":
                     window.show()
                 elif item.action == "quit":
+                    if alarm_mgr:
+                        game_log.update(alarm_mgr.get_usage_seconds())
                     stop_event.set()
                     tray.stop()
                     root.quit()
