@@ -260,3 +260,58 @@
 - `docs/sprint-01/QC.md` ~ `docs/sprint-05/QC.md` 생성 (TC 결과 + 수동 검증 항목)
 - 각 스프린트 문서 구조: PLANNER / DESIGNER / DEVELOPER / **QC** / RESULT (5파일)
 - prompt.md는 매 스프린트 종료 시 반드시 업데이트하는 규칙 수립
+
+---
+
+## Sprint 09 — 음료 기록 & 앱 이름 변경
+
+> 커피마시고싶다 차마시고싶다 누른 횟수를 기록할 방법이 있나? 날짜별로 보고싶은데
+
+- `drink_log.py` 신규 생성: `%APPDATA%\TP_alarm\drink_log.json` 날짜별 JSON 기록
+- 커피·차 버튼 클릭 시 `drink_log.record("coffee"/"tea")` 호출
+- 관리 뷰 4번째 탭 "음료 기록" 추가: Treeview (날짜·☕·🍵·합계), 새로고침 버튼
+- 관리 뷰 진입 시 자동 새로고침
+
+> tp alarm 이름 말고 바꾸자. 양방구는 게임중 으로
+
+- `main.py` `root.title()` → `"양방구는 게임중"`
+- `main_window.py` 창 타이틀 + 헤더 레이블 → `"🎮  양방구는 게임중"`
+- `notification.py` 팝업 타이틀바 → `"🎮  양방구는 게임중"`
+- `tray_app.py` 툴팁 첫 줄 → `"양방구는 게임중"`
+
+---
+
+## Sprint 10 — 폰트 교체 & 게임 테마 적용
+
+> 폰트 바꾸자 Mona12.ttf 로 바꾸고 싶고, 전체적 색상조합을 바꾸고싶은데  
+> #000000, #049CD8, #FBD000, #E52521, #43B047 조합으로 바꿔줘
+
+- `font_loader.py`: Mona12.ttf + Mona12TextKR.ttf + Mona12ColorEmoji.ttf 등록
+- 감지된 패밀리명: `"Mona12"` (픽셀 폰트)
+- 색상 상수 전면 교체: `_ACCENT=#049CD8`, `_RED=#E52521`, `_GREEN=#43B047`, `_YELLOW=#FBD000`, `_FG=#000000`
+- `_BG2=#e8f4fd` (연한 파랑 패널), 트레이 아이콘 파랑+노랑 테두리
+
+> 게임 할때 쓰는 프로그램이라 적당히 게임같은 테마로 보여야하는데  
+> (선택: 현재 유지 + 픽셀 테두리만)
+
+- stats 패널: `_ACCENT` 2px 래퍼 Frame (파란 픽셀 테두리)
+- 음료 버튼 영역: `_YELLOW` 2px 래퍼 Frame (노란 픽셀 테두리)
+- 알람 팝업 `inner` Frame: `highlightthickness=2, highlightbackground=accent`
+
+> 🎮 이모티콘 🕹️로 바꾸자
+
+- 헤더 + 알람 팝업 타이틀바 `"🎮"` → `"🕹️"`
+
+> 근데 왜 이모티콘은 안보이지?
+
+- `Mona12ColorEmoji.ttf` 추가 등록 → GDI 이모티콘 글리프 해결
+
+> 그리고 커피마시고싶다. 차마시고싶다에 테두리 각각 넣어줘 분리해서
+
+- 공동 `_YELLOW` 래퍼 제거 → 커피 버튼 `_ACCENT`(파랑) 개별 테두리, 차 버튼 `_GREEN`(초록) 개별 테두리
+
+> 게임시간도 기록해두자
+
+- `game_log.py` 신규 생성: `%APPDATA%\TP_alarm\game_log.json` 날짜별 플레이 시간(초) 기록
+- `_refresh_display()` 20분 주기 자동 저장 (`% 1200`), 앱 종료 시 최종 저장
+- 관리 뷰 5번째 탭 "게임 기록" 추가: Treeview (날짜·🎮 플레이 시간)
