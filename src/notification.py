@@ -23,8 +23,8 @@ _FADEIN_STEPS = 10
 _FADEIN_MS    = 25
 
 _ACCENT_COLORS = {
-    "fixed":    "#7c3aed",
-    "interval": "#2563eb",
+    "fixed":    "#E52521",
+    "interval": "#049CD8",
 }
 
 _TRANSPARENT_COLOR = "#010101"  # chroma key: canvas 배경 → 윈도우 투명 처리
@@ -105,10 +105,10 @@ def _draw_scene(canvas, frame: int, label: str,
     type_text = "고정 시각 알람" if alarm_type == "fixed" else "인터벌 알람"
     canvas.create_text(W // 2, by1 + 13,
                        text=type_text,
-                       font=(font_loader.family(), 7), fill="#6b7280", anchor="center")
+                       font=(font_loader.family(), 7), fill="#555555", anchor="center")
     canvas.create_text(W // 2, by1 + 34,
                        text=label,
-                       font=(font_loader.family(), 10, "bold"), fill="#1f2937",
+                       font=(font_loader.family(), 10, "bold"), fill="#000000",
                        anchor="center", width=bw - 16)
 
 
@@ -164,15 +164,15 @@ class AlarmNotification:
 
         current_time = datetime.now().strftime("%Y/%m/%d %H:%M")
         tk.Label(info_frame, text=current_time,
-                 font=(font_loader.family(), 10, "bold"), fg="#374151",
+                 font=(font_loader.family(), 10, "bold"), fg="#000000",
                  bg="#ffffff").pack(side="left")
 
         if alarm_type == "interval" and usage_seconds is not None:
             tk.Label(info_frame, text="  |",
-                     font=(font_loader.family(), 10), fg="#d1d5db",
+                     font=(font_loader.family(), 10), fg="#bbbbbb",
                      bg="#ffffff").pack(side="left")
             tk.Label(info_frame, text=f"  {_fmt_usage(usage_seconds)} 사용",
-                     font=(font_loader.family(), 9), fg="#6b7280",
+                     font=(font_loader.family(), 9), fg="#555555",
                      bg="#ffffff").pack(side="left")
 
         btn_row = tk.Frame(bottom, bg="#ffffff")
@@ -191,13 +191,13 @@ class AlarmNotification:
                              minutes=5, get_usage_fn=get_usage_fn)
 
         tk.Button(btn_row, text="5분 후 다시",
-                  font=(font_loader.family(), 8), bg="#f3f4f6", fg="#374151",
-                  activebackground="#e5e7eb", relief="flat",
+                  font=(font_loader.family(), 8), bg="#e0e0e0", fg="#000000",
+                  activebackground="#c8c8c8", relief="flat",
                   padx=6, pady=2, cursor="hand2",
                   command=on_snooze).pack(side="left", padx=(0, 4))
         tk.Button(btn_row, text="닫기",
-                  font=(font_loader.family(), 8), bg="#f3f4f6", fg="#374151",
-                  activebackground="#e5e7eb", relief="flat",
+                  font=(font_loader.family(), 8), bg="#e0e0e0", fg="#000000",
+                  activebackground="#c8c8c8", relief="flat",
                   padx=6, pady=2, cursor="hand2",
                   command=close).pack(side="left")
 

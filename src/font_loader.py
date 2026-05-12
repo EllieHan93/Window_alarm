@@ -2,23 +2,24 @@
 import ctypes
 from pathlib import Path
 
-_FONT_PATH = Path(__file__).parent.parent / "fonts" / "KyoboHandwriting2025lyb.ttf"
+_FONT_DIR = Path(__file__).parent.parent / "fonts" / "Mona_20260424_2053" / "ttf"
+_FONT_MAIN = _FONT_DIR / "01_Main" / "Mona12.ttf"
+_FONT_KR   = _FONT_DIR / "03_Text" / "Mona12TextKR.ttf"
+
 _FAMILY = "맑은 고딕"  # fallback
 
 
 def load() -> str:
-    """TTF를 Windows에 등록하고 실제 폰트 패밀리 이름을 반환한다."""
     global _FAMILY
     try:
-        ctypes.windll.gdi32.AddFontResourceW(str(_FONT_PATH))
+        ctypes.windll.gdi32.AddFontResourceW(str(_FONT_MAIN))
+        ctypes.windll.gdi32.AddFontResourceW(str(_FONT_KR))
         import tkinter.font as tkfont
-        families = tkfont.families()
-        for name in families:
-            if "kyobo" in name.lower() or "교보" in name:
+        for name in tkfont.families():
+            if "mona" in name.lower():
                 _FAMILY = name
                 return _FAMILY
-        # 등록 직후 목록 갱신 전일 수 있으므로 알려진 이름으로 설정
-        _FAMILY = "Kyobo Handwriting 2025"
+        _FAMILY = "Mona12"
     except Exception:
         pass
     return _FAMILY

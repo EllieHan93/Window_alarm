@@ -10,13 +10,14 @@ import font_loader
 import notifier
 import drink_log
 
-_BG = "#ffffff"
-_BG2 = "#f3f4f6"
-_ACCENT = "#7c3aed"
-_FG = "#1f2937"
-_FG2 = "#6b7280"
-_GREEN = "#059669"
-_RED = "#dc2626"
+_BG     = "#ffffff"
+_BG2    = "#e8f4fd"
+_ACCENT = "#049CD8"
+_FG     = "#000000"
+_FG2    = "#555555"
+_GREEN  = "#43B047"
+_RED    = "#E52521"
+_YELLOW = "#FBD000"
 
 _DAYS_KR = ["월", "화", "수", "목", "금", "토", "일"]
 _SOUND_OPTIONS = ["default", "beep", "asterisk"]
@@ -28,10 +29,10 @@ def _style_setup(root: tk.Tk) -> None:
     style.theme_use("clam")
     style.configure("TButton", background=_ACCENT, foreground="white",
                     font=(F, 9), padding=4)
-    style.map("TButton", background=[("active", "#6d28d9")])
+    style.map("TButton", background=[("active", "#0277b8")])
     style.configure("Danger.TButton", background=_RED, foreground="white",
                     font=(F, 9), padding=4)
-    style.map("Danger.TButton", background=[("active", "#dc2626")])
+    style.map("Danger.TButton", background=[("active", "#c41e1b")])
     style.configure("Treeview", background=_BG2, foreground=_FG,
                     fieldbackground=_BG2, rowheight=26, font=(F, 9))
     style.configure("Treeview.Heading", background=_BG2, foreground=_FG2,
@@ -95,12 +96,12 @@ class MainWindow:
         # 헤더 버튼 (관리 뷰에서만 pack)
         self._lock_btn = tk.Button(
             hdr, text="🔒", font=(F, 11),
-            bg=_ACCENT, fg="white", activebackground="#6d28d9",
+            bg=_ACCENT, fg="white", activebackground="#0277b8",
             relief="flat", padx=8, cursor="hand2",
             command=self._enter_status_mode)
         self._preview_btn = tk.Button(
             hdr, text="🔔 미리보기", font=(F, 9),
-            bg="#6d28d9", fg="white", activebackground="#5b21b6",
+            bg="#028ab5", fg="white", activebackground="#0277b8",
             relief="flat", padx=10, pady=4, cursor="hand2",
             command=self._preview_alarm)
 
@@ -130,13 +131,13 @@ class MainWindow:
         btn_row.pack(pady=10)
         tk.Button(btn_row, text="☕ 커피 마시고싶다",
                   font=(F, 10), bg=_ACCENT, fg="white",
-                  activebackground="#6d28d9", relief="flat",
+                  activebackground="#0277b8", relief="flat",
                   padx=12, pady=6, cursor="hand2",
                   command=lambda: self._send_drink("coffee", "☕ 커피 요청이 들어왔어요!")).pack(
                       side="left", padx=(0, 8))
         tk.Button(btn_row, text="🍵 차 마시고싶다",
-                  font=(F, 10), bg="#059669", fg="white",
-                  activebackground="#047857", relief="flat",
+                  font=(F, 10), bg=_GREEN, fg="white",
+                  activebackground="#368a38", relief="flat",
                   padx=12, pady=6, cursor="hand2",
                   command=lambda: self._send_drink("tea", "🍵 차 요청이 들어왔어요!")).pack(
                       side="left")

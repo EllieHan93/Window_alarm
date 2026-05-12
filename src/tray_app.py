@@ -25,7 +25,7 @@ def _create_icon_image() -> Image.Image:
     draw = ImageDraw.Draw(img)
 
     draw.ellipse([2, 2, size - 2, size - 2],
-                 fill=(124, 58, 237), outline=(196, 181, 253), width=2)
+                 fill=(4, 156, 216), outline=(251, 208, 0), width=2)
 
     r = size / 2 - 6
     for deg in [0, 90, 180, 270]:
