@@ -8,6 +8,7 @@ from alarm_manager import AlarmManager
 from notification import AlarmNotification
 import font_loader
 import notifier
+import drink_log
 
 _BG = "#ffffff"
 _BG2 = "#f3f4f6"
@@ -71,7 +72,7 @@ class MainWindow:
     def _build_ui(self) -> None:
         F = font_loader.family()
         self._win = tk.Toplevel(self._root)
-        self._win.title("TP Alarm")
+        self._win.title("양방구는 게임중")
         self._win.configure(bg=_BG)
         self._win.resizable(False, False)
         self._win.protocol("WM_DELETE_WINDOW", self.hide)
@@ -81,7 +82,7 @@ class MainWindow:
         hdr = tk.Frame(self._win, bg=_ACCENT, height=50)
         hdr.pack(fill="x")
         hdr.pack_propagate(False)
-        tk.Label(hdr, text="⏰  TP Alarm", font=(F, 14, "bold"),
+        tk.Label(hdr, text="🎮  양방구는 게임중", font=(F, 14, "bold"),
                  bg=_ACCENT, fg="white").pack(side="left", padx=16, pady=10)
 
         # 투명 관리자 버튼 (항상 우측 상단에 숨겨져 있음)
@@ -131,13 +132,13 @@ class MainWindow:
                   font=(F, 10), bg=_ACCENT, fg="white",
                   activebackground="#6d28d9", relief="flat",
                   padx=12, pady=6, cursor="hand2",
-                  command=lambda: self._send_drink("☕ 커피 요청이 들어왔어요!")).pack(
+                  command=lambda: self._send_drink("coffee", "☕ 커피 요청이 들어왔어요!")).pack(
                       side="left", padx=(0, 8))
         tk.Button(btn_row, text="🍵 차 마시고싶다",
                   font=(F, 10), bg="#059669", fg="white",
                   activebackground="#047857", relief="flat",
                   padx=12, pady=6, cursor="hand2",
-                  command=lambda: self._send_drink("🍵 차 요청이 들어왔어요!")).pack(
+                  command=lambda: self._send_drink("tea", "🍵 차 요청이 들어왔어요!")).pack(
                       side="left")
 
         # 관리 뷰 본체 (탭)
@@ -145,13 +146,16 @@ class MainWindow:
         self._fixed_tab    = ttk.Frame(self._mgmt_body)
         self._interval_tab = ttk.Frame(self._mgmt_body)
         self._settings_tab = ttk.Frame(self._mgmt_body)
+        self._drink_log_tab = ttk.Frame(self._mgmt_body)
         self._mgmt_body.add(self._fixed_tab,    text="  고정 시각 알람  ")
         self._mgmt_body.add(self._interval_tab, text="  인터벌 알람  ")
         self._mgmt_body.add(self._settings_tab, text="  설정  ")
+        self._mgmt_body.add(self._drink_log_tab, text="  음료 기록  ")
 
         self._build_fixed_tab()
         self._build_interval_tab()
         self._build_settings_tab()
+        self._build_drink_log_tab()
 
         # 초기 상태: 상태 뷰
         self._enter_status_mode()
@@ -178,12 +182,14 @@ class MainWindow:
         self._startup_var.set(self._config.start_with_windows)
         self._refresh_fixed_tree()
         self._refresh_interval_tree()
+        self._refresh_drink_log()
 
     def _on_manage(self) -> None:
         PinDialog(self._win, self._config, on_success=self._enter_mgmt_mode)
 
-    def _send_drink(self, message: str) -> None:
+    def _send_drink(self, drink_type: str, message: str) -> None:
         from datetime import datetime
+        drink_log.record(drink_type)
         text = f"{message}\n{datetime.now().strftime('%Y/%m/%d %H:%M')}"
         notifier.send_telegram(
             self._config.settings.telegram_token,
@@ -287,6 +293,38 @@ class MainWindow:
 
         ttk.Button(f, text="저장", command=self._on_telegram_save).pack(
             anchor="w", padx=16, pady=(0, 4))
+
+    def _build_drink_log_tab(self) -> None:
+        F = font_loader.family()
+        f = self._drink_log_tab
+
+        btn_frame = tk.Frame(f, bg=_BG)
+        btn_frame.pack(fill="x", pady=(8, 4), padx=8)
+        ttk.Button(btn_frame, text="🔄 새로고침",
+                   command=self._refresh_drink_log).pack(side="left", padx=2)
+
+        cols = ("date", "coffee", "tea", "total")
+        self._drink_tree = ttk.Treeview(f, columns=cols, show="headings", height=12)
+        self._drink_tree.heading("date",   text="날짜")
+        self._drink_tree.heading("coffee", text="☕ 커피")
+        self._drink_tree.heading("tea",    text="🍵 차")
+        self._drink_tree.heading("total",  text="합계")
+        self._drink_tree.column("date",   width=130, anchor="center")
+        self._drink_tree.column("coffee", width=80,  anchor="center")
+        self._drink_tree.column("tea",    width=80,  anchor="center")
+        self._drink_tree.column("total",  width=80,  anchor="center")
+        self._drink_tree.pack(fill="both", expand=True, padx=8, pady=4)
+
+        self._refresh_drink_log()
+
+    def _refresh_drink_log(self) -> None:
+        self._drink_tree.delete(*self._drink_tree.get_children())
+        for date_str, counts in drink_log.get_log().items():
+            coffee = counts.get("coffee", 0)
+            tea    = counts.get("tea", 0)
+            self._drink_tree.insert("", "end", values=(
+                date_str, coffee, tea, coffee + tea
+            ))
 
     def _on_startup_toggle(self) -> None:
         self._config.start_with_windows = self._startup_var.get()

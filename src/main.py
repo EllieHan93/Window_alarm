@@ -63,7 +63,7 @@ def main() -> None:
 
     root = tk.Tk()
     root.withdraw()
-    root.title("TP Alarm")
+    root.title("양방구는 게임중")
 
     font_loader.load()  # Tk 생성 후 커스텀 폰트 등록
 

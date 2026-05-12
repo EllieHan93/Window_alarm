@@ -88,7 +88,7 @@ class TrayApp:
         )
         count = self._alarm_mgr.get_active_alarm_count()
         alarm_str = f"활성 알람: {count}개" if count else "활성 알람 없음"
-        return f"TP Alarm\n{date_str}\n사용 시간: {usage}{next_str}\n{alarm_str}"
+        return f"양방구는 게임중\n{date_str}\n사용 시간: {usage}{next_str}\n{alarm_str}"
 
     def _tooltip_updater(self) -> None:
         while True:
