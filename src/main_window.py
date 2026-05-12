@@ -84,7 +84,7 @@ class MainWindow:
         hdr = tk.Frame(self._win, bg=_ACCENT, height=50)
         hdr.pack(fill="x")
         hdr.pack_propagate(False)
-        tk.Label(hdr, text="🎮  양방구는 게임중", font=(F, 14, "bold"),
+        tk.Label(hdr, text="🕹️  양방구는 게임중", font=(F, 14, "bold"),
                  bg=_ACCENT, fg="white").pack(side="left", padx=16, pady=10)
 
         # 투명 관리자 버튼 (항상 우측 상단에 숨겨져 있음)
