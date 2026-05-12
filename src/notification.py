@@ -144,7 +144,7 @@ class AlarmNotification:
         title_bar.pack(fill="x")
         title_bar.pack_propagate(False)
         tk.Label(title_bar, text="🕹️  양방구는 게임중",
-                 font=(font_loader.emoji_family(), 8), bg=accent, fg="white").pack(side="left", padx=8)
+                 font=(font_loader.family(), 8), bg=accent, fg="white").pack(side="left", padx=8)
 
         # 캔버스 (이미지 + 말풍선)
         canvas = tk.Canvas(inner, width=_W, height=_CANVAS_H,

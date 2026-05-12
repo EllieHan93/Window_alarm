@@ -72,8 +72,7 @@ class MainWindow:
     # ------------------------------------------------------------------ #
 
     def _build_ui(self) -> None:
-        F  = font_loader.family()
-        EF = font_loader.emoji_family()
+        F = font_loader.family()
         self._win = tk.Toplevel(self._root)
         self._win.title("양방구는 게임중")
         self._win.configure(bg=_BG)
@@ -85,7 +84,7 @@ class MainWindow:
         hdr = tk.Frame(self._win, bg=_ACCENT, height=50)
         hdr.pack(fill="x")
         hdr.pack_propagate(False)
-        tk.Label(hdr, text="🕹️  양방구는 게임중", font=(EF, 14, "bold"),
+        tk.Label(hdr, text="🕹️  양방구는 게임중", font=(F, 14, "bold"),
                  bg=_ACCENT, fg="white").pack(side="left", padx=16, pady=10)
 
         # 투명 관리자 버튼 (항상 우측 상단에 숨겨져 있음)
@@ -97,12 +96,12 @@ class MainWindow:
 
         # 헤더 버튼 (관리 뷰에서만 pack)
         self._lock_btn = tk.Button(
-            hdr, text="🔒", font=(EF, 11),
+            hdr, text="🔒", font=(F, 11),
             bg=_ACCENT, fg="white", activebackground="#0277b8",
             relief="flat", padx=8, cursor="hand2",
             command=self._enter_status_mode)
         self._preview_btn = tk.Button(
-            hdr, text="🔔 미리보기", font=(EF, 9),
+            hdr, text="🔔 미리보기", font=(F, 9),
             bg="#028ab5", fg="white", activebackground="#0277b8",
             relief="flat", padx=10, pady=4, cursor="hand2",
             command=self._preview_alarm)
@@ -137,7 +136,7 @@ class MainWindow:
         self._coffee_border = tk.Frame(btn_row, bg=_ACCENT, padx=2, pady=2)
         self._coffee_border.pack(side="left", padx=(0, 8))
         tk.Button(self._coffee_border, text="☕ 커피 마시고싶다",
-                  font=(EF, 10), bg=_ACCENT, fg="white",
+                  font=(F, 10), bg=_ACCENT, fg="white",
                   activebackground="#0277b8", relief="flat",
                   padx=12, pady=6, cursor="hand2",
                   command=lambda: self._send_drink("coffee", "☕ 커피 요청이 들어왔어요!")).pack()
@@ -145,14 +144,14 @@ class MainWindow:
         self._tea_border = tk.Frame(btn_row, bg=_GREEN, padx=2, pady=2)
         self._tea_border.pack(side="left")
         tk.Button(self._tea_border, text="🍵 차 마시고싶다",
-                  font=(EF, 10), bg=_GREEN, fg="white",
+                  font=(F, 10), bg=_GREEN, fg="white",
                   activebackground="#368a38", relief="flat",
                   padx=12, pady=6, cursor="hand2",
                   command=lambda: self._send_drink("tea", "🍵 차 요청이 들어왔어요!")).pack()
 
         self._drink_feedback = tk.Label(
             self._status_footer, text="",
-            font=(EF, 11, "bold"), bg=_BG, fg=_YELLOW)
+            font=(F, 11, "bold"), bg=_BG, fg=_YELLOW)
         self._drink_feedback.pack(pady=(0, 4))
 
         # 관리 뷰 본체 (탭)
@@ -554,7 +553,7 @@ class PinDialog(tk.Toplevel):
 
     def _build(self) -> None:
         tk.Label(self, text="🔐  관리자 비밀번호",
-                 font=(font_loader.emoji_family(), 11, "bold"),
+                 font=(font_loader.family(), 11, "bold"),
                  bg=_BG, fg=_FG).pack(pady=(20, 8), padx=24)
 
         self._pin_var = tk.StringVar()

@@ -32,5 +32,5 @@ def family() -> str:
 
 
 def emoji_family() -> str:
-    """이모티콘 포함 위젯용 폰트. Segoe UI는 한국어+이모티콘 동시 지원."""
+    """이모티콘 포함 위젯용 폰트."""
     return "Segoe UI"
