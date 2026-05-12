@@ -128,24 +128,26 @@ class MainWindow:
         sp.columnconfigure(0, weight=1)
         sp.columnconfigure(1, weight=1)
 
-        # 상태 뷰 하단 (커피 / 차 버튼) — 픽셀 테두리 래퍼
+        # 상태 뷰 하단 (커피 / 차 버튼) — 버튼별 개별 픽셀 테두리
         self._status_footer = tk.Frame(self._win, bg=_BG)
-        btn_wrap = tk.Frame(self._status_footer, bg=_YELLOW, padx=2, pady=2)
-        btn_wrap.pack(pady=10)
-        btn_row = tk.Frame(btn_wrap, bg=_BG)
-        btn_row.pack()
-        tk.Button(btn_row, text="☕ 커피 마시고싶다",
+        btn_row = tk.Frame(self._status_footer, bg=_BG)
+        btn_row.pack(pady=10)
+
+        coffee_border = tk.Frame(btn_row, bg=_ACCENT, padx=2, pady=2)
+        coffee_border.pack(side="left", padx=(0, 8))
+        tk.Button(coffee_border, text="☕ 커피 마시고싶다",
                   font=(F, 10), bg=_ACCENT, fg="white",
                   activebackground="#0277b8", relief="flat",
                   padx=12, pady=6, cursor="hand2",
-                  command=lambda: self._send_drink("coffee", "☕ 커피 요청이 들어왔어요!")).pack(
-                      side="left", padx=(0, 8))
-        tk.Button(btn_row, text="🍵 차 마시고싶다",
+                  command=lambda: self._send_drink("coffee", "☕ 커피 요청이 들어왔어요!")).pack()
+
+        tea_border = tk.Frame(btn_row, bg=_GREEN, padx=2, pady=2)
+        tea_border.pack(side="left")
+        tk.Button(tea_border, text="🍵 차 마시고싶다",
                   font=(F, 10), bg=_GREEN, fg="white",
                   activebackground="#368a38", relief="flat",
                   padx=12, pady=6, cursor="hand2",
-                  command=lambda: self._send_drink("tea", "🍵 차 요청이 들어왔어요!")).pack(
-                      side="left")
+                  command=lambda: self._send_drink("tea", "🍵 차 요청이 들어왔어요!")).pack()
 
         # 관리 뷰 본체 (탭)
         self._mgmt_body = ttk.Notebook(self._win)
