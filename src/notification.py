@@ -135,7 +135,8 @@ class AlarmNotification:
 
         accent = _ACCENT_COLORS.get(alarm_type, _ACCENT_COLORS["fixed"])
 
-        inner = tk.Frame(dialog, bg="#ffffff")
+        inner = tk.Frame(dialog, bg="#ffffff",
+                         highlightthickness=2, highlightbackground=accent)
         inner.pack(fill="both", expand=True)
 
         # 타이틀 바 (드래그 핸들)

@@ -106,9 +106,11 @@ class MainWindow:
             relief="flat", padx=10, pady=4, cursor="hand2",
             command=self._preview_alarm)
 
-        # 상태 패널 (항상 표시)
-        sp = tk.Frame(self._win, bg=_BG2, pady=12)
-        sp.pack(fill="x", padx=12, pady=(10, 0))
+        # 상태 패널 (항상 표시) — 픽셀 테두리 래퍼
+        sp_wrap = tk.Frame(self._win, bg=_ACCENT, padx=2, pady=2)
+        sp_wrap.pack(fill="x", padx=12, pady=(10, 0))
+        sp = tk.Frame(sp_wrap, bg=_BG2, pady=12)
+        sp.pack(fill="both")
 
         tk.Label(sp, text="사용 시간", font=(F, 9),
                  bg=_BG2, fg=_FG2).grid(row=0, column=0, padx=16, sticky="w")
@@ -126,10 +128,12 @@ class MainWindow:
         sp.columnconfigure(0, weight=1)
         sp.columnconfigure(1, weight=1)
 
-        # 상태 뷰 하단 (커피 / 차 버튼)
+        # 상태 뷰 하단 (커피 / 차 버튼) — 픽셀 테두리 래퍼
         self._status_footer = tk.Frame(self._win, bg=_BG)
-        btn_row = tk.Frame(self._status_footer, bg=_BG)
-        btn_row.pack(pady=10)
+        btn_wrap = tk.Frame(self._status_footer, bg=_YELLOW, padx=2, pady=2)
+        btn_wrap.pack(pady=10)
+        btn_row = tk.Frame(btn_wrap, bg=_BG)
+        btn_row.pack()
         tk.Button(btn_row, text="☕ 커피 마시고싶다",
                   font=(F, 10), bg=_ACCENT, fg="white",
                   activebackground="#0277b8", relief="flat",
