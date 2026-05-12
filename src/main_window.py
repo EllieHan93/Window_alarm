@@ -411,9 +411,9 @@ class MainWindow:
         else:
             self._next_label.config(text="없음")
 
-        # 1분마다 게임 시간 저장
+        # 20분마다 게임 시간 저장
         self._game_log_tick = getattr(self, "_game_log_tick", 0) + 1
-        if self._game_log_tick % 60 == 0:
+        if self._game_log_tick % 1200 == 0:
             game_log.update(secs)
 
         self._win.after(1000, self._refresh_display)
