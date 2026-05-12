@@ -29,3 +29,8 @@ def load() -> str:
 
 def family() -> str:
     return _FAMILY
+
+
+def emoji_family() -> str:
+    """이모티콘 포함 위젯용 폰트. Segoe UI는 한국어+이모티콘 동시 지원."""
+    return "Segoe UI"
