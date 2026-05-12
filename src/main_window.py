@@ -6,6 +6,8 @@ from typing import Optional, Callable
 from config_manager import ConfigManager, FixedAlarmConfig, IntervalAlarmConfig
 from alarm_manager import AlarmManager
 from notification import AlarmNotification
+import font_loader
+import notifier
 
 _BG = "#ffffff"
 _BG2 = "#f3f4f6"
@@ -20,31 +22,31 @@ _SOUND_OPTIONS = ["default", "beep", "asterisk"]
 
 
 def _style_setup(root: tk.Tk) -> None:
+    F = font_loader.family()
     style = ttk.Style(root)
     style.theme_use("clam")
     style.configure("TButton", background=_ACCENT, foreground="white",
-                    font=("맑은 고딕", 9), padding=4)
+                    font=(F, 9), padding=4)
     style.map("TButton", background=[("active", "#6d28d9")])
     style.configure("Danger.TButton", background=_RED, foreground="white",
-                    font=("맑은 고딕", 9), padding=4)
+                    font=(F, 9), padding=4)
     style.map("Danger.TButton", background=[("active", "#dc2626")])
     style.configure("Treeview", background=_BG2, foreground=_FG,
-                    fieldbackground=_BG2, rowheight=26,
-                    font=("맑은 고딕", 9))
+                    fieldbackground=_BG2, rowheight=26, font=(F, 9))
     style.configure("Treeview.Heading", background=_BG2, foreground=_FG2,
-                    font=("맑은 고딕", 9, "bold"))
+                    font=(F, 9, "bold"))
     style.map("Treeview", background=[("selected", _ACCENT)])
-    style.configure("TLabel", background=_BG, foreground=_FG)
+    style.configure("TLabel", background=_BG, foreground=_FG, font=(F, 9))
     style.configure("TFrame", background=_BG)
     style.configure("TCombobox", fieldbackground="white", background="white",
-                    foreground=_FG, selectbackground=_ACCENT)
+                    foreground=_FG, selectbackground=_ACCENT, font=(F, 9))
     style.configure("TEntry", fieldbackground="white", foreground=_FG,
-                    insertcolor=_FG)
-    style.configure("TCheckbutton", background=_BG, foreground=_FG)
-    style.configure("TSpinbox", fieldbackground="white", foreground=_FG)
+                    insertcolor=_FG, font=(F, 9))
+    style.configure("TCheckbutton", background=_BG, foreground=_FG, font=(F, 9))
+    style.configure("TSpinbox", fieldbackground="white", foreground=_FG, font=(F, 9))
     style.configure("TNotebook", background=_BG)
     style.configure("TNotebook.Tab", background=_BG2, foreground=_FG2,
-                    padding=[10, 4])
+                    padding=[10, 4], font=(F, 9))
     style.map("TNotebook.Tab", background=[("selected", _ACCENT)],
               foreground=[("selected", "white")])
 
@@ -67,6 +69,7 @@ class MainWindow:
     # ------------------------------------------------------------------ #
 
     def _build_ui(self) -> None:
+        F = font_loader.family()
         self._win = tk.Toplevel(self._root)
         self._win.title("TP Alarm")
         self._win.configure(bg=_BG)
@@ -78,17 +81,24 @@ class MainWindow:
         hdr = tk.Frame(self._win, bg=_ACCENT, height=50)
         hdr.pack(fill="x")
         hdr.pack_propagate(False)
-        tk.Label(hdr, text="⏰  TP Alarm", font=("맑은 고딕", 14, "bold"),
+        tk.Label(hdr, text="⏰  TP Alarm", font=(F, 14, "bold"),
                  bg=_ACCENT, fg="white").pack(side="left", padx=16, pady=10)
+
+        # 투명 관리자 버튼 (항상 우측 상단에 숨겨져 있음)
+        tk.Button(hdr, text="", bg=_ACCENT, fg=_ACCENT,
+                  activebackground=_ACCENT, activeforeground=_ACCENT,
+                  relief="flat", bd=0, highlightthickness=0,
+                  width=3, cursor="arrow",
+                  command=self._on_manage).pack(side="right", padx=2, pady=8)
 
         # 헤더 버튼 (관리 뷰에서만 pack)
         self._lock_btn = tk.Button(
-            hdr, text="🔒", font=("맑은 고딕", 11),
+            hdr, text="🔒", font=(F, 11),
             bg=_ACCENT, fg="white", activebackground="#6d28d9",
             relief="flat", padx=8, cursor="hand2",
             command=self._enter_status_mode)
         self._preview_btn = tk.Button(
-            hdr, text="🔔 미리보기", font=("맑은 고딕", 9),
+            hdr, text="🔔 미리보기", font=(F, 9),
             bg="#6d28d9", fg="white", activebackground="#5b21b6",
             relief="flat", padx=10, pady=4, cursor="hand2",
             command=self._preview_alarm)
@@ -97,29 +107,38 @@ class MainWindow:
         sp = tk.Frame(self._win, bg=_BG2, pady=12)
         sp.pack(fill="x", padx=12, pady=(10, 0))
 
-        tk.Label(sp, text="사용 시간", font=("맑은 고딕", 9),
+        tk.Label(sp, text="사용 시간", font=(F, 9),
                  bg=_BG2, fg=_FG2).grid(row=0, column=0, padx=16, sticky="w")
         self._usage_label = tk.Label(sp, text="--",
-                                     font=("맑은 고딕", 18, "bold"),
+                                     font=(F, 16, "bold"),
                                      bg=_BG2, fg=_GREEN)
         self._usage_label.grid(row=1, column=0, padx=16, sticky="w")
 
-        tk.Label(sp, text="다음 알람까지", font=("맑은 고딕", 9),
+        tk.Label(sp, text="다음 알람까지", font=(F, 9),
                  bg=_BG2, fg=_FG2).grid(row=0, column=1, padx=16, sticky="w")
         self._next_label = tk.Label(sp, text="--",
-                                    font=("맑은 고딕", 18, "bold"),
+                                    font=(F, 16, "bold"),
                                     bg=_BG2, fg=_FG)
         self._next_label.grid(row=1, column=1, padx=16, sticky="w")
         sp.columnconfigure(0, weight=1)
         sp.columnconfigure(1, weight=1)
 
-        # 상태 뷰 하단 (관리자 설정 버튼)
+        # 상태 뷰 하단 (커피 / 차 버튼)
         self._status_footer = tk.Frame(self._win, bg=_BG)
-        tk.Button(self._status_footer, text="관리자 설정",
-                  font=("맑은 고딕", 10), bg=_ACCENT, fg="white",
+        btn_row = tk.Frame(self._status_footer, bg=_BG)
+        btn_row.pack(pady=10)
+        tk.Button(btn_row, text="☕ 커피 마시고싶다",
+                  font=(F, 10), bg=_ACCENT, fg="white",
                   activebackground="#6d28d9", relief="flat",
-                  padx=16, pady=6, cursor="hand2",
-                  command=self._on_manage).pack(pady=4)
+                  padx=12, pady=6, cursor="hand2",
+                  command=lambda: self._send_drink("☕ 커피 요청이 들어왔어요!")).pack(
+                      side="left", padx=(0, 8))
+        tk.Button(btn_row, text="🍵 차 마시고싶다",
+                  font=(F, 10), bg="#059669", fg="white",
+                  activebackground="#047857", relief="flat",
+                  padx=12, pady=6, cursor="hand2",
+                  command=lambda: self._send_drink("🍵 차 요청이 들어왔어요!")).pack(
+                      side="left")
 
         # 관리 뷰 본체 (탭)
         self._mgmt_body = ttk.Notebook(self._win)
@@ -146,8 +165,8 @@ class MainWindow:
         self._mgmt_body.pack_forget()
         self._preview_btn.pack_forget()
         self._lock_btn.pack_forget()
-        self._status_footer.pack(fill="x", pady=16)
-        self._win.geometry("320x200")
+        self._status_footer.pack(fill="x", pady=8)
+        self._win.geometry("400x240")
 
     def _enter_mgmt_mode(self) -> None:
         self._authenticated = True
@@ -162,6 +181,15 @@ class MainWindow:
 
     def _on_manage(self) -> None:
         PinDialog(self._win, self._config, on_success=self._enter_mgmt_mode)
+
+    def _send_drink(self, message: str) -> None:
+        from datetime import datetime
+        text = f"{message}\n{datetime.now().strftime('%Y/%m/%d %H:%M')}"
+        notifier.send_telegram(
+            self._config.settings.telegram_token,
+            self._config.settings.telegram_chat_id,
+            text,
+        )
 
     # ------------------------------------------------------------------ #
     #  탭 구성
@@ -223,8 +251,9 @@ class MainWindow:
         self._refresh_interval_tree()
 
     def _build_settings_tab(self) -> None:
+        F = font_loader.family()
         f = self._settings_tab
-        pad = {"padx": 16, "pady": 8}
+        pad = {"padx": 16, "pady": 6}
 
         self._startup_var = tk.BooleanVar(value=self._config.start_with_windows)
         ttk.Checkbutton(f, text="Windows 시작 시 자동 실행",
@@ -232,17 +261,43 @@ class MainWindow:
                         command=self._on_startup_toggle).pack(anchor="w", **pad)
 
         self._source_var = tk.StringVar(value=self._config.settings.usage_time_source)
-        ttk.Label(f, text="사용 시간 기준").pack(anchor="w", padx=16, pady=(12, 0))
+        ttk.Label(f, text="사용 시간 기준").pack(anchor="w", padx=16, pady=(10, 0))
         ttk.Radiobutton(f, text="앱 시작 시간 기준", variable=self._source_var,
                         value="app_start", command=self._on_source_change).pack(anchor="w", padx=24)
         ttk.Radiobutton(f, text="PC 부팅 시간 기준", variable=self._source_var,
                         value="boot", command=self._on_source_change).pack(anchor="w", padx=24)
+
+        # 구분선
+        tk.Frame(f, bg="#e5e7eb", height=1).pack(fill="x", padx=16, pady=(12, 4))
+
+        # Telegram 설정
+        ttk.Label(f, text="Telegram 알림 설정",
+                  font=(F, 9, "bold")).pack(anchor="w", padx=16, pady=(4, 2))
+        ttk.Label(f, text="봇 토큰 (@BotFather에서 발급)",
+                  font=(F, 8), foreground=_FG2).pack(anchor="w", padx=16)
+        self._tg_token_var = tk.StringVar(value=self._config.settings.telegram_token)
+        ttk.Entry(f, textvariable=self._tg_token_var, width=44,
+                  font=(F, 9)).pack(anchor="w", padx=16, pady=(2, 6))
+
+        ttk.Label(f, text="채팅 ID (Chat ID)",
+                  font=(F, 8), foreground=_FG2).pack(anchor="w", padx=16)
+        self._tg_chatid_var = tk.StringVar(value=self._config.settings.telegram_chat_id)
+        ttk.Entry(f, textvariable=self._tg_chatid_var, width=24,
+                  font=(F, 9)).pack(anchor="w", padx=16, pady=(2, 6))
+
+        ttk.Button(f, text="저장", command=self._on_telegram_save).pack(
+            anchor="w", padx=16, pady=(0, 4))
 
     def _on_startup_toggle(self) -> None:
         self._config.start_with_windows = self._startup_var.get()
 
     def _on_source_change(self) -> None:
         self._config.settings.usage_time_source = self._source_var.get()
+        self._config.save()
+
+    def _on_telegram_save(self) -> None:
+        self._config.settings.telegram_token   = self._tg_token_var.get().strip()
+        self._config.settings.telegram_chat_id = self._tg_chatid_var.get().strip()
         self._config.save()
 
     # ------------------------------------------------------------------ #
@@ -395,19 +450,19 @@ class PinDialog(tk.Toplevel):
 
     def _build(self) -> None:
         tk.Label(self, text="🔐  관리자 비밀번호",
-                 font=("맑은 고딕", 11, "bold"),
+                 font=(font_loader.family(), 11, "bold"),
                  bg=_BG, fg=_FG).pack(pady=(20, 8), padx=24)
 
         self._pin_var = tk.StringVar()
         entry = ttk.Entry(self, textvariable=self._pin_var,
                           show="●", width=12, justify="center",
-                          font=("맑은 고딕", 14))
+                          font=(font_loader.family(), 14))
         entry.pack(pady=4, padx=24)
         entry.bind("<Return>", lambda e: self._confirm())
         entry.focus_set()
 
         self._error_label = tk.Label(self, text="",
-                                     font=("맑은 고딕", 9),
+                                     font=(font_loader.family(), 9),
                                      bg=_BG, fg=_RED)
         self._error_label.pack(pady=(2, 0))
 
@@ -459,13 +514,13 @@ class FixedAlarmDialog(tk.Toplevel):
         a = self._alarm
 
         tk.Label(self, text="알람 이름", bg=_BG, fg=_FG2,
-                 font=("맑은 고딕", 9)).grid(row=0, column=0, sticky="w", **p)
+                 font=(font_loader.family(), 9)).grid(row=0, column=0, sticky="w", **p)
         self._label_var = tk.StringVar(value=a.label if a else "")
         ttk.Entry(self, textvariable=self._label_var, width=24).grid(
             row=0, column=1, columnspan=3, sticky="ew", **p)
 
         tk.Label(self, text="시각 (HH:MM)", bg=_BG, fg=_FG2,
-                 font=("맑은 고딕", 9)).grid(row=1, column=0, sticky="w", **p)
+                 font=(font_loader.family(), 9)).grid(row=1, column=0, sticky="w", **p)
         self._hour_var = tk.StringVar(value=str(a.hour)   if a else "9")
         self._min_var  = tk.StringVar(value=str(a.minute) if a else "0")
         ttk.Spinbox(self, from_=0, to=23, textvariable=self._hour_var,
@@ -475,7 +530,7 @@ class FixedAlarmDialog(tk.Toplevel):
                     width=5, format="%02.0f").grid(row=1, column=3, **p)
 
         tk.Label(self, text="요일 (빈칸=매일)", bg=_BG, fg=_FG2,
-                 font=("맑은 고딕", 9)).grid(row=2, column=0, sticky="w", **p)
+                 font=(font_loader.family(), 9)).grid(row=2, column=0, sticky="w", **p)
         self._day_vars = []
         day_frame = tk.Frame(self, bg=_BG)
         day_frame.grid(row=2, column=1, columnspan=3, sticky="w", **p)
@@ -486,7 +541,7 @@ class FixedAlarmDialog(tk.Toplevel):
             ttk.Checkbutton(day_frame, text=name, variable=var).pack(side="left")
 
         tk.Label(self, text="소리", bg=_BG, fg=_FG2,
-                 font=("맑은 고딕", 9)).grid(row=3, column=0, sticky="w", **p)
+                 font=(font_loader.family(), 9)).grid(row=3, column=0, sticky="w", **p)
         self._sound_var = tk.StringVar(value=a.sound if a else "default")
         ttk.Combobox(self, textvariable=self._sound_var,
                      values=_SOUND_OPTIONS, state="readonly",
@@ -548,13 +603,13 @@ class IntervalAlarmDialog(tk.Toplevel):
         a = self._alarm
 
         tk.Label(self, text="알람 이름", bg=_BG, fg=_FG2,
-                 font=("맑은 고딕", 9)).grid(row=0, column=0, sticky="w", **p)
+                 font=(font_loader.family(), 9)).grid(row=0, column=0, sticky="w", **p)
         self._label_var = tk.StringVar(value=a.label if a else "")
         ttk.Entry(self, textvariable=self._label_var, width=24).grid(
             row=0, column=1, columnspan=2, sticky="ew", **p)
 
         tk.Label(self, text="간격 (시간)", bg=_BG, fg=_FG2,
-                 font=("맑은 고딕", 9)).grid(row=1, column=0, sticky="w", **p)
+                 font=(font_loader.family(), 9)).grid(row=1, column=0, sticky="w", **p)
         existing_h = (a.interval_minutes // 60) if a else 1
         existing_m = (a.interval_minutes % 60)  if a else 0
         self._hour_var = tk.StringVar(value=str(existing_h))
@@ -567,7 +622,7 @@ class IntervalAlarmDialog(tk.Toplevel):
         tk.Label(hf, text="분",   bg=_BG, fg=_FG).pack(side="left", padx=4)
 
         tk.Label(self, text="소리", bg=_BG, fg=_FG2,
-                 font=("맑은 고딕", 9)).grid(row=2, column=0, sticky="w", **p)
+                 font=(font_loader.family(), 9)).grid(row=2, column=0, sticky="w", **p)
         self._sound_var = tk.StringVar(value=a.sound if a else "beep")
         ttk.Combobox(self, textvariable=self._sound_var,
                      values=_SOUND_OPTIONS, state="readonly",

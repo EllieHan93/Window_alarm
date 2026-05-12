@@ -230,6 +230,27 @@
 
 ---
 
+## Sprint 08 — 폰트·UI 정제 & 음료 요청 알림
+
+> 자 다음스프린트, fonts 폴더에 있는 글꼴 사용해서 폰트 다 바꿔주고,  
+> 상태뷰 크기는 좀더 컸으면 좋겠어. 글씨가 안잘리게,  
+> 그리고, 관리자 설정 버튼은 관리자 설정이 아니라  
+> 오른쪽 위 상단에 투명한 버튼으로 만들어서 숨기고싶어.  
+> accent 버튼 영역에는 다른 버튼 두개를 만들고싶은데,  
+> 커피 마시고싶다 랑 차 마시고싶다 버튼이 있어야해.  
+> 버튼을 누르면 관리자에게 알럿이 가게 하고싶은데, 어떤방법이 있을까?
+
+- 알림 방법 선택: **Telegram 봇**
+- `fonts/KyoboHandwriting2025lyb.ttf` → `font_loader.py`로 등록, 패밀리명 `"Kyobo Handwriting 2025"`
+- 모든 모듈 폰트를 교보 손글씨로 교체 (main_window, notification)
+- 상태 뷰 320×200 → 400×240
+- 관리자 버튼: 헤더 우측 투명 클릭 영역 (cursor=arrow, bg=accent)
+- 커피/차 버튼 추가, `notifier.py`로 Telegram 비동기 발송
+- `AppSettings`에 `telegram_token`, `telegram_chat_id` 추가
+- 설정 탭에 Telegram 입력 UI + 봇 설정 안내 추가
+
+---
+
 > 좋아, 앞으로의 프롬프트도 항상 이렇게 정리해줘.  
 > 그럼 work 프로세스 한번 되짚어볼까?  
 > 그리고 각 스프린트단위로 tc생성 및 결과도 QC 에이전트 생성해서 md도 관리하는게 좋겠어.

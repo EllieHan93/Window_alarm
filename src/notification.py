@@ -6,6 +6,7 @@ import winsound
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional
+import font_loader
 
 _SOUNDS = {
     "default": ("SystemExclamation", winsound.SND_ALIAS),
@@ -104,10 +105,10 @@ def _draw_scene(canvas, frame: int, label: str,
     type_text = "고정 시각 알람" if alarm_type == "fixed" else "인터벌 알람"
     canvas.create_text(W // 2, by1 + 13,
                        text=type_text,
-                       font=("맑은 고딕", 7), fill="#6b7280", anchor="center")
+                       font=(font_loader.family(), 7), fill="#6b7280", anchor="center")
     canvas.create_text(W // 2, by1 + 34,
                        text=label,
-                       font=("맑은 고딕", 10, "bold"), fill="#1f2937",
+                       font=(font_loader.family(), 10, "bold"), fill="#1f2937",
                        anchor="center", width=bw - 16)
 
 
@@ -142,7 +143,7 @@ class AlarmNotification:
         title_bar.pack(fill="x")
         title_bar.pack_propagate(False)
         tk.Label(title_bar, text="⏰  TP Alarm",
-                 font=("맑은 고딕", 8), bg=accent, fg="white").pack(side="left", padx=8)
+                 font=(font_loader.family(), 8), bg=accent, fg="white").pack(side="left", padx=8)
 
         # 캔버스 (이미지 + 말풍선)
         canvas = tk.Canvas(inner, width=_W, height=_CANVAS_H,
@@ -163,15 +164,15 @@ class AlarmNotification:
 
         current_time = datetime.now().strftime("%Y/%m/%d %H:%M")
         tk.Label(info_frame, text=current_time,
-                 font=("맑은 고딕", 10, "bold"), fg="#374151",
+                 font=(font_loader.family(), 10, "bold"), fg="#374151",
                  bg="#ffffff").pack(side="left")
 
         if alarm_type == "interval" and usage_seconds is not None:
             tk.Label(info_frame, text="  |",
-                     font=("맑은 고딕", 10), fg="#d1d5db",
+                     font=(font_loader.family(), 10), fg="#d1d5db",
                      bg="#ffffff").pack(side="left")
             tk.Label(info_frame, text=f"  {_fmt_usage(usage_seconds)} 사용",
-                     font=("맑은 고딕", 9), fg="#6b7280",
+                     font=(font_loader.family(), 9), fg="#6b7280",
                      bg="#ffffff").pack(side="left")
 
         btn_row = tk.Frame(bottom, bg="#ffffff")
@@ -190,12 +191,12 @@ class AlarmNotification:
                              minutes=5, get_usage_fn=get_usage_fn)
 
         tk.Button(btn_row, text="5분 후 다시",
-                  font=("맑은 고딕", 8), bg="#f3f4f6", fg="#374151",
+                  font=(font_loader.family(), 8), bg="#f3f4f6", fg="#374151",
                   activebackground="#e5e7eb", relief="flat",
                   padx=6, pady=2, cursor="hand2",
                   command=on_snooze).pack(side="left", padx=(0, 4))
         tk.Button(btn_row, text="닫기",
-                  font=("맑은 고딕", 8), bg="#f3f4f6", fg="#374151",
+                  font=(font_loader.family(), 8), bg="#f3f4f6", fg="#374151",
                   activebackground="#e5e7eb", relief="flat",
                   padx=6, pady=2, cursor="hand2",
                   command=close).pack(side="left")

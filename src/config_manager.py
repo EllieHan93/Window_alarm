@@ -35,6 +35,8 @@ class AppSettings:
     start_with_windows: bool = True
     usage_time_source: str = "app_start"  # "app_start" or "boot"
     admin_pin: str = "0104"
+    telegram_token: str = ""
+    telegram_chat_id: str = ""
 
 
 _DEFAULT_CONFIG = {
@@ -78,6 +80,8 @@ class ConfigManager:
             start_with_windows=s.get("start_with_windows", True),
             usage_time_source=s.get("usage_time_source", "app_start"),
             admin_pin=s.get("admin_pin", "0104"),
+            telegram_token=s.get("telegram_token", ""),
+            telegram_chat_id=s.get("telegram_chat_id", ""),
         )
         self._write_startup_registry(self.settings.start_with_windows)
 

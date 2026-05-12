@@ -11,6 +11,7 @@ from alarm_manager import AlarmManager, AlarmEvent
 from main_window import MainWindow
 from tray_app import TrayApp, Command
 from notification import AlarmNotification
+import font_loader
 
 
 def _scheduler_loop(alarm_mgr: AlarmManager, queue: Queue, stop_event: threading.Event) -> None:
@@ -63,6 +64,8 @@ def main() -> None:
     root = tk.Tk()
     root.withdraw()
     root.title("TP Alarm")
+
+    font_loader.load()  # Tk 생성 후 커스텀 폰트 등록
 
     window = MainWindow(root, queue, alarm_mgr, config)
     tray = TrayApp(queue, alarm_mgr)
