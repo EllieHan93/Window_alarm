@@ -222,7 +222,7 @@ class MainWindow:
             border, label_text, orig = self._tea_border,   "차 +1",   _GREEN
 
         border.config(bg=_YELLOW)
-        self._drink_feedback.config(text=label_text, fg=orig)
+        self._drink_feedback.config(text=label_text, fg=_RED)
 
         def restore():
             if border.winfo_exists():
@@ -230,7 +230,7 @@ class MainWindow:
             if self._drink_feedback.winfo_exists():
                 self._drink_feedback.config(text="")
 
-        self._win.after(700, restore)
+        self._win.after(1500, restore)
 
     # ------------------------------------------------------------------ #
     #  탭 구성

@@ -6,7 +6,7 @@ a = Analysis(
     ['src/main.py'],
     pathex=['src'],
     binaries=[],
-    datas=[('assets', 'assets')],
+    datas=[('assets', 'assets'), ('src/source', 'source')],
     hiddenimports=[
         'pystray._win32',
         'PIL._tkinter_finder',

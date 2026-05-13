@@ -102,11 +102,7 @@ def _draw_scene(canvas, frame: int, label: str,
     canvas.create_line(mx - 6, by2, mx + 6, by2, fill="white", width=3)
 
     # 말풍선 텍스트
-    type_text = "고정 시각 알람" if alarm_type == "fixed" else "인터벌 알람"
-    canvas.create_text(W // 2, by1 + 13,
-                       text=type_text,
-                       font=(font_loader.family(), 7), fill="#555555", anchor="center")
-    canvas.create_text(W // 2, by1 + 34,
+    canvas.create_text(W // 2, by1 + bh // 2,
                        text=label,
                        font=(font_loader.family(), 10, "bold"), fill="#000000",
                        anchor="center", width=bw - 16)
@@ -176,31 +172,12 @@ class AlarmNotification:
                      font=(font_loader.family(), 9), fg="#555555",
                      bg="#ffffff").pack(side="left")
 
-        btn_row = tk.Frame(bottom, bg="#ffffff")
-        btn_row.pack(anchor="w")
-
         closed = [False]
 
         def close():
             if not closed[0] and dialog.winfo_exists():
                 closed[0] = True
                 dialog.destroy()
-
-        def on_snooze():
-            close()
-            _schedule_snooze(root, label, alarm_type, sound,
-                             minutes=5, get_usage_fn=get_usage_fn)
-
-        tk.Button(btn_row, text="5분 후 다시",
-                  font=(font_loader.family(), 8), bg="#e0e0e0", fg="#000000",
-                  activebackground="#c8c8c8", relief="flat",
-                  padx=6, pady=2, cursor="hand2",
-                  command=on_snooze).pack(side="left", padx=(0, 4))
-        tk.Button(btn_row, text="닫기",
-                  font=(font_loader.family(), 8), bg="#e0e0e0", fg="#000000",
-                  activebackground="#c8c8c8", relief="flat",
-                  padx=6, pady=2, cursor="hand2",
-                  command=close).pack(side="left")
 
         # 카운트다운 바
         bar_bg = tk.Frame(inner, bg="#e5e7eb", height=4)
